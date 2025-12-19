@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="referrer" content="strict-origin-when-cross-origin">
+    <title>Guess Whose Favorite Christmas Song This Is?</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+        h1 { text-align: center; color: #2c3e50; }
+        p { text-align: center; }
+        .question { margin-bottom: 50px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .song-title { font-weight: bold; font-size: 1.3em; margin-bottom: 15px; color: #c0392b; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin-bottom: 20px; border-radius: 8px; }
+        .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .options { list-style: none; padding: 0; }
+        .options li { margin: 12px 0; font-size: 1.1em; }
+        .options label { cursor: pointer; }
+        #submit-section { text-align: center; margin-top: 50px; }
+        #submit-section input { padding: 10px; font-size: 1.1em; width: 250px; }
+        #submit-section button { padding: 12px 30px; font-size: 1.1em; background: #27ae60; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px; }
+        #thank-you { display: none; text-align: center; font-size: 2em; color: #27ae60; margin-top: 100px; }
+    </style>
+</head>
+<body>
+    <h1>Guess Whose Favorite Christmas Song This Is!</h1>
+    <p>Listen to each song (optional) and pick which person chose it as their all-time favorite.</p>
+
+    <div id="quiz"></div>
+
+    <div id="submit-section">
+        <label for="player-name"><strong>Enter your name to submit:</strong><br></label>
+        <input type="text" id="player-name" placeholder="Your name" required>
+        <br><br>
+        <button onclick="submitQuiz()">Submit Quiz</button>
+    </div>
+
+    <div id="thank-you">Thank you for playing!<br>Your results have been recorded.</div>
+
+    <script>
+        // All videos now use youtube-nocookie.com for better compatibility with recent YouTube changes
+        const people = [
+            { name: "Whitney", song: "Christmas Time is Here by Peanuts", youtube: "https://www.youtube-nocookie.com/embed/4PzetPqepXA" },
+            { name: "Jessi", song: "Drummer Boy by Justin Bieber/Busta Rhymes", youtube: "https://www.youtube-nocookie.com/embed/k8IlIC7lasU" },
+            { name: "Joel", song: "I Want A Hippopotamus For Christmas by Gayla Peevey", youtube: "https://www.youtube-nocookie.com/embed/OjPm0o04lGE" },
+            { name: "Josh", song: "Jingle Bell Rock by Hall and Oates", youtube: "https://www.youtube-nocookie.com/embed/5vyMuxxLsD0" },
+            { name: "Paige", song: "Jingle Bells by Frank Sinatra", youtube: "https://www.youtube-nocookie.com/embed/hLf0-lro8X8" },
+            { name: "Sheena", song: "Rockin' Around the Christmas Tree by Brenda Lee", youtube: "https://www.youtube-nocookie.com/embed/TFsZy9t-qDc" },
+            { name: "Jason", song: "His Favorite Christmas Story by Capital Lights", youtube: "https://www.youtube-nocookie.com/embed/DgFi2A-FyWI" },
+            { name: "Allie", song: "O Holy Night by Kelly Clarkson", youtube: "https://www.youtube-nocookie.com/embed/qrRRqRIBZCA" }
+        ];
+
+        const numQuestions = people.length; // Uses all 8 songs
+
+        // Shuffle and select questions
+        const shuffled = [...people].sort(() => 0.5 - Math.random());
+        const questions = shuffled.slice(0, numQuestions);
+
+        const quizDiv = document.getElementById('quiz');
+
+        questions.forEach((q, index) => {
+            const questionDiv = document.createElement('div');
+            questionDiv.className = 'question';
+
+            const songTitle = document.createElement('div');
+            songTitle.className = 'song-title';
+            songTitle.textContent = `Question ${index + 1}: "${q.song}"`;
+            questionDiv.appendChild(songTitle);
+
+            // Responsive YouTube embed
+            const videoContainer = document.createElement('div');
+            videoContainer.className = 'video-container';
+
+            const iframe = document.createElement('iframe');
+            iframe.src = q.youtube;
+            iframe.frameBorder = "0";
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+            iframe.referrerPolicy = "strict-origin-when-cross-origin";
+            iframe.allowFullscreen = true;
+            videoContainer.appendChild(iframe);
+
+            questionDiv.appendChild(videoContainer);
+
+            // 4 multiple-choice options
+            const allNames = people.map(p => p.name);
+            const distractors = allNames
+                .filter(n => n !== q.name)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 3);
+            const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
+
+            const ul = document.createElement('ul');
+            ul.className = 'options';
+
+            options.forEach(option => {
+                const li = document.createElement('li');
+                const input = document.createElement('input');
+                input.type = 'radio';
+                input.name = `question${index}`;
+                input.value = option;
+                input.id = `q${index}_${option.replace(/\s/g, '')}`;
+                input.required = true;
+
+                const label = document.createElement('label');
+                label.htmlFor = `q${index}_${option.replace(/\s/g, '')}`;
+                label.textContent = option;
+
+                li.appendChild(input);
+                li.appendChild(label);
+                ul.appendChild(li);
+            });
+
+            questionDiv.appendChild(ul);
+            quizDiv.appendChild(questionDiv);
+        });
+
+        // Show submit section
+        document.getElementById('submit-section').style.display = 'block';
+
+        function submitQuiz() {
+            let score = 0;
+            const total = questions.length;
+
+            questions.forEach((q, index) => {
+                const selected = document.querySelector(`input[name="question${index}"]:checked`);
+                if (selected && selected.value === q.name) {
+                    score++;
+                }
+            });
+
+            const playerName = document.getElementById('player-name').value.trim();
+            if (!playerName) {
+                alert('Please enter your name before submitting!');
+                return;
+            }
+
+            // Send data to your Google Sheet
+            const data = new FormData();
+            data.append('Timestamp', new Date().toISOString());
+            data.append('Name', playerName);
+            data.append('Score', `${score}/${total}`);
+
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbyRNsGrrqiEW25059b_8fkHHtjgJCEdw3cBP2KwaYCPuoiTe8W54X112hivXgVYh3Tyhg/exec';
+
+            fetch(scriptURL, {
+                method: 'POST',
+                body: data
+            })
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('quiz').style.display = 'none';
+                    document.getElementById('submit-section').style.display = 'none';
+                    document.getElementById('thank-you').style.display = 'block';
+                } else {
+                    alert('There was a problem submitting. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Network error – check your connection and try again.');
+            });
+        }
+    </script>
+</body>
+</html>
