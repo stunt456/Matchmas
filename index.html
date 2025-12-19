@@ -5,8 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Guess Whose Favorite Christmas Song This Is?</title>
-    <!-- YouTube IFrame API -->
-    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -72,7 +70,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .video-container > div {
+        .video-container iframe {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
@@ -104,7 +102,7 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 15px rgba(0,0,0,0.2);
         }
-        .options input[type="radio"]:checked ~ label {
+        .options input[type="radio"]:checked + label {
             background: #c0392b !important;
             color: white !important;
             transform: translateY(-3px);
@@ -192,7 +190,9 @@
             animation: fall linear forwards;
         }
         @keyframes fall {
-            to { transform: translateY(100vh); }
+            to {
+                transform: translateY(100vh);
+            }
         }
         @media (max-width: 600px) {
             h1 { font-size: 1.8em; }
@@ -247,8 +247,6 @@
     </script>
 
     <script>
-        let players = [];
-
         const people = [
             { name: "Whitney", song: "Christmas Time is Here by Peanuts", videoId: "4PzetPqepXA" },
             { name: "Jessi", song: "Drummer Boy by Justin Bieber/Busta Rhymes", videoId: "k8IlIC7lasU" },
@@ -268,7 +266,6 @@
         const questions = shuffled;
         const quizDiv = document.getElementById('quiz');
 
-        // Build DOM structure first (empty player divs)
         questions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
             questionDiv.className = 'question';
@@ -281,9 +278,13 @@
             const videoContainer = document.createElement('div');
             videoContainer.className = 'video-container';
 
-            const playerDiv = document.createElement('div');
-            playerDiv.id = `player-${index}`;
-            videoContainer.appendChild(playerDiv);
+            const iframe = document.createElement('iframe');
+            iframe.src = `https://www.youtube-nocookie.com/embed/${q.videoId}?rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1`;
+            iframe.frameBorder = "0";
+            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+            iframe.referrerPolicy = "strict-origin-when-cross-origin";
+            iframe.allowFullscreen = true;
+            videoContainer.appendChild(iframe);
             questionDiv.appendChild(videoContainer);
 
             const allNames = people.map(p => p.name);
@@ -316,58 +317,6 @@
         });
 
         document.getElementById('submit-section').style.display = 'block';
-
-        // Global callback for API load
-        window.onYouTubeIframeAPIReady = function() {
-            YT.ready(function() {
-                questions.forEach((q, index) => {
-                    const player = new YT.Player(`player-${index}`, {
-                        videoId: q.videoId,
-                        playerVars: {
-                            enablejsapi: 1,
-                            origin: window.location.origin,
-                            rel: 0,
-                            modestbranding: 1
-                        },
-                        events: {
-                            'onReady': (e) => onPlayerReady(e, index),
-                            'onStateChange': (e) => onPlayerStateChange(e, index)
-                        }
-                    });
-                    players[index] = player;
-                });
-            });
-        };
-
-        function onPlayerReady(event, index) {
-            const player = event.target;
-            const duration = player.getDuration();
-
-            if (duration <= maxClip) {
-                player.playVideo();
-                return;
-            }
-
-            const clipDur = Math.floor(Math.random() * (maxClip - minClip + 1)) + minClip;
-            const maxStart = duration - clipDur;
-            const randomStart = Math.random() * maxStart;
-
-            player.seekTo(randomStart, true);
-            player.playVideo();
-
-            players[index].clipEnd = randomStart + clipDur;
-        }
-
-        function onPlayerStateChange(event, index) {
-            if (event.data === YT.PlayerState.PLAYING) {
-                const player = event.target;
-                const current = player.getCurrentTime();
-                const end = players[index].clipEnd || null;
-                if (end && current >= end) {
-                    player.pauseVideo();
-                }
-            }
-        }
 
         function submitQuiz() {
             const button = document.querySelector('#submit-section button');
