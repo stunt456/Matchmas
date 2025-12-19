@@ -10,17 +10,19 @@
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 20px 0;
-            background: url('https://static.vecteezy.com/system/resources/previews/071/369/670/large_2x/christmas-background-christmas-wallpaper-festive-christmas-scene-with-red-and-gold-ornaments-fir-branches-string-lights-and-gifts-in-snow-photo.jpg') no-repeat center center fixed;
+            /* New snowy winter forest background */
+            background: url('https://raw.githubusercontent.com/stunt456/Matchmas/main/XmasBackground.jpg') no-repeat center center fixed;
             background-size: cover;
             color: #fff;
             min-height: 100vh;
             position: relative;
         }
+        /* Reduced overlay darkness for the lighter background */
         body::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(0, 0, 0, 0.4);
+            background: rgba(0, 0, 0, 0.3);
             z-index: -1;
         }
         .container {
@@ -205,7 +207,6 @@
 <body>
     <div class="container">
         <header>
-            <!-- New main banner -->
             <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/QuizMasBanner.jpg" alt="QuizMas Banner">
             <h1>Guess Whose Favorite Christmas Song This Is! 🎄</h1>
         </header>
@@ -221,7 +222,6 @@
 
         <div id="thank-you">
             Thank you for playing!<br>Your results have been recorded.<br>Merry Christmas! ❄️
-            <!-- Family photo shows only on success screen -->
             <br><br>
             <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/family-photo.png" alt="Scared Hay Hay">
         </div>
