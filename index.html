@@ -268,7 +268,7 @@
         const questions = shuffled;
         const quizDiv = document.getElementById('quiz');
 
-        // Build DOM structure first
+        // Build DOM structure first (empty player divs)
         questions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
             questionDiv.className = 'question';
@@ -317,8 +317,8 @@
 
         document.getElementById('submit-section').style.display = 'block';
 
-        // YouTube API ready → create players safely
-        function onYouTubeIframeAPIReady() {
+        // Global callback for API load
+        window.onYouTubeIframeAPIReady = function() {
             YT.ready(function() {
                 questions.forEach((q, index) => {
                     const player = new YT.Player(`player-${index}`, {
@@ -337,7 +337,7 @@
                     players[index] = player;
                 });
             });
-        }
+        };
 
         function onPlayerReady(event, index) {
             const player = event.target;
