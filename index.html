@@ -75,29 +75,35 @@
             top: 0; left: 0;
             width: 100%; height: 100%;
         }
-        .play-button {
+        .play-overlay {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 80px;
-            height: 80px;
-            background: rgba(192, 57, 43, 0.8);
-            border-radius: 50%;
-            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            cursor: pointer;
+            border-radius: 10px;
+            transition: opacity 0.3s ease;
+        }
+        .play-button {
+            width: 90px;
+            height: 90px;
+            background: rgba(192, 57, 43, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.5);
             transition: all 0.3s ease;
         }
         .play-button:hover {
             background: #c0392b;
-            transform: translate(-50%, -50%) scale(1.1);
+            transform: scale(1.1);
         }
         .play-button::after {
             content: '▶';
-            font-size: 40px;
+            font-size: 45px;
             color: white;
             margin-left: 8px;
         }
@@ -285,6 +291,9 @@
             { name: "Alex", song: "Jingle Swing by Ali McGregor", videoId: "6ZXJGonvp58" }
         ];
 
+        const minClip = 15;
+        const maxClip = 20;
+
         const shuffled = [...people].sort(() => 0.5 - Math.random());
         const questions = shuffled;
         const quizDiv = document.getElementById('quiz');
@@ -301,30 +310,39 @@
             const videoContainer = document.createElement('div');
             videoContainer.className = 'video-container';
 
-            // Poster/placeholder image (YouTube thumbnail)
-            const thumbnailUrl = `https://img.youtube.com/vi/${q.videoId}/maxresdefault.jpg`;
+            // Calculate random start time (we'll use it in the src when play is triggered)
+            const randomStart = Math.floor(Math.random() * 60) + 10; // Random 10-70 seconds in (adjust range if needed)
 
+            // Initial iframe - no autoplay, shows thumbnail
             const iframe = document.createElement('iframe');
-            iframe.src = `https://www.youtube-nocookie.com/embed/${q.videoId}?rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&autoplay=0`;
+            iframe.src = `https://www.youtube-nocookie.com/embed/${q.videoId}?rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&autoplay=0&start=0`;
             iframe.frameBorder = "0";
             iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
             iframe.referrerPolicy = "strict-origin-when-cross-origin";
             iframe.allowFullscreen = true;
-            iframe.loading = "lazy"; // Helps performance
+            iframe.loading = "lazy";
             videoContainer.appendChild(iframe);
 
-            // Play button overlay
+            // Custom overlay with big play button
+            const overlay = document.createElement('div');
+            overlay.className = 'play-overlay';
+
             const playButton = document.createElement('div');
             playButton.className = 'play-button';
-            playButton.onclick = function(e) {
-                e.stopPropagation();
-                iframe.src += "&autoplay=1"; // Trigger play
-                playButton.style.display = 'none';
+            overlay.appendChild(playButton);
+
+            // Click overlay to play random section
+            overlay.onclick = function() {
+                iframe.src = `https://www.youtube-nocookie.com/embed/${q.videoId}?rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&autoplay=1&start=${randomStart}`;
+                overlay.style.opacity = '0';
+                setTimeout(() => overlay.style.display = 'none', 300);
             };
-            videoContainer.appendChild(playButton);
+
+            videoContainer.appendChild(overlay);
 
             questionDiv.appendChild(videoContainer);
 
+            // Options
             const allNames = people.map(p => p.name);
             const distractors = allNames.filter(n => n !== q.name).sort(() => 0.5 - Math.random()).slice(0, 3);
             const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
