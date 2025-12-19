@@ -5,19 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="referrer" content="strict-origin-when-cross-origin">
     <title>Guess Whose Favorite Christmas Song This Is?</title>
+    <!-- Load YouTube IFrame Player API asynchronously -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
             padding: 20px 0;
-            /* New snowy winter forest background */
             background: url('https://raw.githubusercontent.com/stunt456/Matchmas/main/XmasBackground.jpg') no-repeat center center fixed;
             background-size: cover;
             color: #fff;
             min-height: 100vh;
             position: relative;
         }
-        /* Reduced overlay darkness for the lighter background */
         body::before {
             content: '';
             position: absolute;
@@ -72,7 +72,7 @@
             border-radius: 10px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
-        .video-container iframe {
+        .video-container div {
             position: absolute;
             top: 0; left: 0;
             width: 100%; height: 100%;
@@ -250,71 +250,132 @@
     </script>
 
     <script>
+        // Global array to hold player instances
+        let players = [];
+
         const people = [
-            { name: "Whitney", song: "Christmas Time is Here by Peanuts", youtube: "https://www.youtube-nocookie.com/embed/4PzetPqepXA" },
-            { name: "Jessi", song: "Drummer Boy by Justin Bieber/Busta Rhymes", youtube: "https://www.youtube-nocookie.com/embed/k8IlIC7lasU" },
-            { name: "Joel", song: "I Want A Hippopotamus For Christmas by Gayla Peevey", youtube: "https://www.youtube-nocookie.com/embed/OjPm0o04lGE" },
-            { name: "Josh", song: "Jingle Bell Rock by Hall and Oates", youtube: "https://www.youtube-nocookie.com/embed/5vyMuxxLsD0" },
-            { name: "Paige", song: "Jingle Bells by Frank Sinatra", youtube: "https://www.youtube-nocookie.com/embed/hLf0-lro8X8" },
-            { name: "Sheena", song: "Rockin' Around the Christmas Tree by Brenda Lee", youtube: "https://www.youtube-nocookie.com/embed/TFsZy9t-qDc" },
-            { name: "Jason", song: "His Favorite Christmas Story by Capital Lights", youtube: "https://www.youtube-nocookie.com/embed/DgFi2A-FyWI" },
-            { name: "Allie", song: "O Holy Night by Kelly Clarkson", youtube: "https://www.youtube-nocookie.com/embed/qrRRqRIBZCA" },
-            { name: "Alex", song: "Jingle Swing by Ali McGregor", youtube: "https://www.youtube-nocookie.com/embed/6ZXJGonvp58" }
+            { name: "Whitney", song: "Christmas Time is Here by Peanuts", videoId: "4PzetPqepXA" },
+            { name: "Jessi", song: "Drummer Boy by Justin Bieber/Busta Rhymes", videoId: "k8IlIC7lasU" },
+            { name: "Joel", song: "I Want A Hippopotamus For Christmas by Gayla Peevey", videoId: "OjPm0o04lGE" },
+            { name: "Josh", song: "Jingle Bell Rock by Hall and Oates", videoId: "5vyMuxxLsD0" },
+            { name: "Paige", song: "Jingle Bells by Frank Sinatra", videoId: "hLf0-lro8X8" },
+            { name: "Sheena", song: "Rockin' Around the Christmas Tree by Brenda Lee", videoId: "TFsZy9t-qDc" },
+            { name: "Jason", song: "His Favorite Christmas Story by Capital Lights", videoId: "DgFi2A-FyWI" },
+            { name: "Allie", song: "O Holy Night by Kelly Clarkson", videoId: "qrRRqRIBZCA" },
+            { name: "Alex", song: "Jingle Swing by Ali McGregor", videoId: "6ZXJGonvp58" }
         ];
+
+        const clipLength = 18; // Average 15-20 seconds (random 15-20)
+        const minClip = 15;
+        const maxClip = 20;
 
         const numQuestions = people.length;
         const shuffled = [...people].sort(() => 0.5 - Math.random());
         const questions = shuffled.slice(0, numQuestions);
         const quizDiv = document.getElementById('quiz');
 
-        questions.forEach((q, index) => {
-            const questionDiv = document.createElement('div');
-            questionDiv.className = 'question';
+        // Called automatically by YouTube API when ready
+        function onYouTubeIframeAPIReady() {
+            questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
 
-            const songTitle = document.createElement('div');
-            songTitle.className = 'song-title';
-            songTitle.textContent = `Question ${index + 1}: "${q.song}"`;
-            questionDiv.appendChild(songTitle);
+                const songTitle = document.createElement('div');
+                songTitle.className = 'song-title';
+                songTitle.textContent = `Question ${index + 1}: "${q.song}"`;
+                questionDiv.appendChild(songTitle);
 
-            const videoContainer = document.createElement('div');
-            videoContainer.className = 'video-container';
-            const iframe = document.createElement('iframe');
-            iframe.src = q.youtube;
-            iframe.frameBorder = "0";
-            iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
-            iframe.referrerPolicy = "strict-origin-when-cross-origin";
-            iframe.allowFullscreen = true;
-            videoContainer.appendChild(iframe);
-            questionDiv.appendChild(videoContainer);
+                const videoContainer = document.createElement('div');
+                videoContainer.className = 'video-container';
 
-            const allNames = people.map(p => p.name);
-            const distractors = allNames.filter(n => n !== q.name).sort(() => 0.5 - Math.random()).slice(0, 3);
-            const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
+                // Create unique div for each player
+                const playerDiv = document.createElement('div');
+                playerDiv.id = `player-${index}`;
+                videoContainer.appendChild(playerDiv);
+                questionDiv.appendChild(videoContainer);
 
-            const ul = document.createElement('ul');
-            ul.className = 'options';
+                // Create player once API is ready
+                const player = new YT.Player(`player-${index}`, {
+                    height: '100%',
+                    width: '100%',
+                    videoId: q.videoId,
+                    playerVars: {
+                        enablejsapi: 1,
+                        origin: window.location.origin,
+                        rel: 0,
+                        modestbranding: 1
+                    },
+                    events: {
+                        'onReady': (event) => onPlayerReady(event, index),
+                        'onStateChange': (event) => onPlayerStateChange(event, index)
+                    }
+                });
 
-            options.forEach(option => {
-                const li = document.createElement('li');
-                const input = document.createElement('input');
-                input.type = 'radio';
-                input.name = `question${index}`;
-                input.value = option;
-                input.id = `q${index}_${option.replace(/\s/g, '')}`;
-                input.required = true;
+                players[index] = player;
 
-                const label = document.createElement('label');
-                label.htmlFor = `q${index}_${option.replace(/\s/g, '')}`;
-                label.textContent = option;
+                // Options (same as before)
+                const allNames = people.map(p => p.name);
+                const distractors = allNames.filter(n => n !== q.name).sort(() => 0.5 - Math.random()).slice(0, 3);
+                const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
 
-                li.appendChild(input);
-                li.appendChild(label);
-                ul.appendChild(li);
+                const ul = document.createElement('ul');
+                ul.className = 'options';
+
+                options.forEach(option => {
+                    const li = document.createElement('li');
+                    const input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = `question${index}`;
+                    input.value = option;
+                    input.id = `q${index}_${option.replace(/\s/g, '')}`;
+                    input.required = true;
+
+                    const label = document.createElement('label');
+                    label.htmlFor = `q${index}_${option.replace(/\s/g, '')}`;
+                    label.textContent = option;
+
+                    li.appendChild(input);
+                    li.appendChild(label);
+                    ul.appendChild(li);
+                });
+
+                questionDiv.appendChild(ul);
+                quizDiv.appendChild(questionDiv);
             });
+        }
 
-            questionDiv.appendChild(ul);
-            quizDiv.appendChild(questionDiv);
-        });
+        function onPlayerReady(event, index) {
+            const player = event.target;
+            const duration = player.getDuration();
+
+            if (duration < maxClip) {
+                // Video too short - just play normally
+                player.playVideo();
+                return;
+            }
+
+            const clipDur = Math.floor(Math.random() * (maxClip - minClip + 1)) + minClip;
+            const maxStart = duration - clipDur;
+            const randomStart = Math.random() * maxStart;
+
+            player.seekTo(randomStart, true);
+            player.playVideo();
+
+            // Store end time for this player
+            players[index].clipEnd = randomStart + clipDur;
+        }
+
+        function onPlayerStateChange(event, index) {
+            if (event.data === YT.PlayerState.PLAYING) {
+                const player = event.target;
+                const currentTime = player.getCurrentTime();
+                const endTime = players[index].clipEnd;
+
+                if (endTime && currentTime >= endTime) {
+                    player.pauseVideo();
+                }
+            }
+        }
 
         document.getElementById('submit-section').style.display = 'block';
 
