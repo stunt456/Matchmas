@@ -102,7 +102,6 @@
             transform: translateY(-3px);
             box-shadow: 0 8px 15px rgba(0,0,0,0.2);
         }
-        /* Selected state - stays highlighted after tap/click */
         .options input[type="radio"]:checked ~ label {
             background: #c0392b !important;
             color: white !important;
@@ -147,6 +146,33 @@
             text-shadow: 2px 2px 6px #000;
             margin-top: 100px;
         }
+        /* Loading overlay */
+        #loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+            color: white;
+            font-size: 1.8em;
+            text-align: center;
+        }
+        .spinner {
+            width: 80px;
+            height: 80px;
+            border: 8px solid rgba(255,255,255,0.3);
+            border-top: 8px solid #ffd700;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         .snowflake {
             position: absolute;
             top: -10px;
@@ -185,6 +211,12 @@
         </div>
 
         <div id="thank-you">Thank you for playing!<br>Your results have been recorded. Merry Christmas! ❄️</div>
+    </div>
+
+    <!-- Loading overlay with spinner -->
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <div>Submitting your answers...<br>Please wait a moment 🎄</div>
     </div>
 
     <!-- Falling snow -->
@@ -273,6 +305,13 @@
         document.getElementById('submit-section').style.display = 'block';
 
         function submitQuiz() {
+            // Prevent double-submit
+            const button = document.querySelector('#submit-section button');
+            button.disabled = true;
+
+            // Show loading overlay
+            document.getElementById('loading-overlay').style.display = 'flex';
+
             let score = 0;
             const total = questions.length;
             questions.forEach((q, index) => {
@@ -283,6 +322,8 @@
             const playerName = document.getElementById('player-name').value.trim();
             if (!playerName) {
                 alert('Please enter your name before submitting!');
+                document.getElementById('loading-overlay').style.display = 'none';
+                button.disabled = false;
                 return;
             }
 
@@ -306,6 +347,11 @@
             .catch(error => {
                 console.error('Error:', error);
                 alert('Network error – check your connection and try again.');
+            })
+            .finally(() => {
+                // Hide loading overlay in all cases
+                document.getElementById('loading-overlay').style.display = 'none';
+                button.disabled = false;
             });
         }
     </script>
