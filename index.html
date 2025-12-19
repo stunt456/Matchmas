@@ -146,7 +146,15 @@
             text-shadow: 2px 2px 6px #000;
             margin-top: 100px;
         }
-        /* Loading overlay */
+        #thank-you img {
+            width: 100%;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+            margin: 40px 0;
+            border: 5px solid #ffd700;
+        }
         #loading-overlay {
             display: none;
             position: fixed;
@@ -197,7 +205,8 @@
 <body>
     <div class="container">
         <header>
-            <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/family-photo.png" alt="Scared Hay Hay">
+            <!-- New main banner -->
+            <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/QuizMasBanner.jpg" alt="QuizMas Banner">
             <h1>Guess Whose Favorite Christmas Song This Is! 🎄</h1>
         </header>
 
@@ -210,7 +219,12 @@
             <button onclick="submitQuiz()">Submit Quiz 🎅</button>
         </div>
 
-        <div id="thank-you">Thank you for playing!<br>Your results have been recorded. Merry Christmas! ❄️</div>
+        <div id="thank-you">
+            Thank you for playing!<br>Your results have been recorded.<br>Merry Christmas! ❄️
+            <!-- Family photo shows only on success screen -->
+            <br><br>
+            <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/family-photo.png" alt="Scared Hay Hay">
+        </div>
     </div>
 
     <!-- Loading overlay with spinner -->
@@ -305,11 +319,9 @@
         document.getElementById('submit-section').style.display = 'block';
 
         function submitQuiz() {
-            // Prevent double-submit
             const button = document.querySelector('#submit-section button');
             button.disabled = true;
 
-            // Show loading overlay
             document.getElementById('loading-overlay').style.display = 'flex';
 
             let score = 0;
@@ -349,7 +361,6 @@
                 alert('Network error – check your connection and try again.');
             })
             .finally(() => {
-                // Hide loading overlay in all cases
                 document.getElementById('loading-overlay').style.display = 'none';
                 button.disabled = false;
             });
