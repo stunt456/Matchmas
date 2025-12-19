@@ -291,12 +291,11 @@
             { name: "Alex", song: "Jingle Swing by Ali McGregor", videoId: "6ZXJGonvp58" }
         ];
 
-        const minClip = 15;
-        const maxClip = 20;
-
         const shuffled = [...people].sort(() => 0.5 - Math.random());
         const questions = shuffled;
         const quizDiv = document.getElementById('quiz');
+
+        const iframes = []; // Store references to all iframes
 
         questions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
@@ -310,10 +309,8 @@
             const videoContainer = document.createElement('div');
             videoContainer.className = 'video-container';
 
-            // Calculate random start time (we'll use it in the src when play is triggered)
-            const randomStart = Math.floor(Math.random() * 60) + 10; // Random 10-70 seconds in (adjust range if needed)
+            const randomStart = Math.floor(Math.random() * 60) + 10;
 
-            // Initial iframe - no autoplay, shows thumbnail
             const iframe = document.createElement('iframe');
             iframe.src = `https://www.youtube-nocookie.com/embed/${q.videoId}?rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&autoplay=0&start=0`;
             iframe.frameBorder = "0";
@@ -323,7 +320,8 @@
             iframe.loading = "lazy";
             videoContainer.appendChild(iframe);
 
-            // Custom overlay with big play button
+            iframes.push(iframe); // Save reference
+
             const overlay = document.createElement('div');
             overlay.className = 'play-overlay';
 
@@ -331,7 +329,6 @@
             playButton.className = 'play-button';
             overlay.appendChild(playButton);
 
-            // Click overlay to play random section
             overlay.onclick = function() {
                 iframe.src = `https://www.youtube-nocookie.com/embed/${q.videoId}?rel=0&modestbranding=1&iv_load_policy=3&enablejsapi=1&autoplay=1&start=${randomStart}`;
                 overlay.style.opacity = '0';
@@ -342,7 +339,6 @@
 
             questionDiv.appendChild(videoContainer);
 
-            // Options
             const allNames = people.map(p => p.name);
             const distractors = allNames.filter(n => n !== q.name).sort(() => 0.5 - Math.random()).slice(0, 3);
             const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
@@ -373,6 +369,29 @@
         });
 
         document.getElementById('submit-section').style.display = 'block';
+
+        // Intersection Observer to pause videos when out of view
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const iframe = entry.target.querySelector('iframe');
+                if (iframe) {
+                    if (entry.isIntersecting) {
+                        // Optional: resume if it was playing (but we don't track state, so skip)
+                    } else {
+                        // Pause by removing autoplay and reloading with autoplay=0
+                        const currentSrc = iframe.src;
+                        if (currentSrc.includes('autoplay=1')) {
+                            iframe.src = currentSrc.replace('autoplay=1', 'autoplay=0');
+                        }
+                    }
+                }
+            });
+        }, { threshold: 0.5 }); // Pause when less than 50% visible
+
+        // Observe each video container
+        document.querySelectorAll('.video-container').forEach(container => {
+            observer.observe(container);
+        });
 
         function submitQuiz() {
             const button = document.querySelector('#submit-section button');
