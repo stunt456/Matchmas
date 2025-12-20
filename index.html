@@ -288,14 +288,13 @@
             { name: "Sheena", song: "Rockin' Around the Christmas Tree by Brenda Lee", videoId: "TFsZy9t-qDc" },
             { name: "Jason", song: "His Favorite Christmas Story by Capital Lights", videoId: "DgFi2A-FyWI" },
             { name: "Allie", song: "O Holy Night by Kelly Clarkson", videoId: "qrRRqRIBZCA" },
-            { name: "Alex", song: "Jingle Swing by Ali McGregor", videoId: "6ZXJGonvp58" }
+            { name: "Alex", song: "Jingle Swing by Ali McGregor", videoId: "6ZXJGonvp58" },
+            { name: "Kyle", song: "The Christmas Song by Olivia Dean", videoId: "Nv85T6ZEkS8" }
         ];
 
         const shuffled = [...people].sort(() => 0.5 - Math.random());
         const questions = shuffled;
         const quizDiv = document.getElementById('quiz');
-
-        const iframes = []; // Store references to all iframes
 
         questions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
@@ -320,8 +319,6 @@
             iframe.loading = "lazy";
             videoContainer.appendChild(iframe);
 
-            iframes.push(iframe); // Save reference
-
             const overlay = document.createElement('div');
             overlay.className = 'play-overlay';
 
@@ -339,8 +336,12 @@
 
             questionDiv.appendChild(videoContainer);
 
+            // 5 options: correct + 4 random distractors
             const allNames = people.map(p => p.name);
-            const distractors = allNames.filter(n => n !== q.name).sort(() => 0.5 - Math.random()).slice(0, 3);
+            const distractors = allNames
+                .filter(n => n !== q.name)
+                .sort(() => 0.5 - Math.random())
+                .slice(0, 4);
             const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
 
             const ul = document.createElement('ul');
@@ -370,25 +371,19 @@
 
         document.getElementById('submit-section').style.display = 'block';
 
-        // Intersection Observer to pause videos when out of view
+        // Pause videos when scrolled out of view
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const iframe = entry.target.querySelector('iframe');
                 if (iframe) {
-                    if (entry.isIntersecting) {
-                        // Optional: resume if it was playing (but we don't track state, so skip)
-                    } else {
-                        // Pause by removing autoplay and reloading with autoplay=0
-                        const currentSrc = iframe.src;
-                        if (currentSrc.includes('autoplay=1')) {
-                            iframe.src = currentSrc.replace('autoplay=1', 'autoplay=0');
-                        }
+                    const currentSrc = iframe.src;
+                    if (!entry.isIntersecting && currentSrc.includes('autoplay=1')) {
+                        iframe.src = currentSrc.replace('autoplay=1', 'autoplay=0');
                     }
                 }
             });
-        }, { threshold: 0.5 }); // Pause when less than 50% visible
+        }, { threshold: 0.5 });
 
-        // Observe each video container
         document.querySelectorAll('.video-container').forEach(container => {
             observer.observe(container);
         });
