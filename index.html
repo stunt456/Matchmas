@@ -128,17 +128,19 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .options label:hover {
+        .options label:hover:not(.wrong) {
             background: #e74c3c;
             color: white;
             transform: translateY(-3px);
             box-shadow: 0 8px 15px rgba(0,0,0,0.2);
         }
-        .options input[type="radio"]:checked + label {
-            background: #c0392b !important;
-            color: white !important;
-            transform: translateY(-3px);
-            box-shadow: 0 8px 15px rgba(0,0,0,0.3);
+        .options label.wrong {
+            background: #ccc !important;
+            color: #666 !important;
+            border-color: #999;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
         }
         .options input[type="radio"] {
             display: none;
@@ -173,10 +175,11 @@
         #thank-you {
             display: none;
             text-align: center;
-            font-size: 2.5em;
+            font-size: 3em;
             color: #ffd700;
-            text-shadow: 2px 2px 6px #000;
+            text-shadow: 3px 3px 8px #000;
             margin-top: 100px;
+            line-height: 1.4;
         }
         #thank-you img {
             width: 100%;
@@ -251,7 +254,8 @@
         </div>
 
         <div id="thank-you">
-            Thank you for playing!<br>Your results have been recorded.<br>Merry Christmas! ❄️
+            You got <span id="final-score"></span> points!<br><br>
+            Your results have been recorded.<br>Merry Christmas! ❄️
             <br><br>
             <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/family-photo.png" alt="Scared Hay Hay">
         </div>
@@ -296,9 +300,12 @@
         const questions = shuffled;
         const quizDiv = document.getElementById('quiz');
 
+        let totalPoints = 0; // Will accumulate earned points
+
         questions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
             questionDiv.className = 'question';
+            questionDiv.dataset.index = index;
 
             const songTitle = document.createElement('div');
             songTitle.className = 'song-title';
@@ -333,19 +340,17 @@
             };
 
             videoContainer.appendChild(overlay);
-
             questionDiv.appendChild(videoContainer);
 
-            // 5 options: correct + 4 random distractors
+            // 5 options
             const allNames = people.map(p => p.name);
-            const distractors = allNames
-                .filter(n => n !== q.name)
-                .sort(() => 0.5 - Math.random())
-                .slice(0, 4);
+            const distractors = allNames.filter(n => n !== q.name).sort(() => 0.5 - Math.random()).slice(0, 4);
             const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
 
             const ul = document.createElement('ul');
             ul.className = 'options';
+
+            let attemptsLeft = 5; // Max points per question
 
             options.forEach(option => {
                 const li = document.createElement('li');
@@ -354,11 +359,32 @@
                 input.name = `question${index}`;
                 input.value = option;
                 input.id = `q${index}_${option.replace(/\s/g, '')}`;
-                input.required = true;
 
                 const label = document.createElement('label');
                 label.htmlFor = `q${index}_${option.replace(/\s/g, '')}`;
                 label.textContent = option;
+
+                // Click handler for feedback
+                label.onclick = function(e) {
+                    if (label.classList.contains('wrong')) {
+                        e.preventDefault();
+                        return;
+                    }
+
+                    if (option === q.name) {
+                        // Correct!
+                        totalPoints += attemptsLeft;
+                        ul.querySelectorAll('label').forEach(l => {
+                            l.onclick = null; // Disable further clicks
+                            if (l !== label) l.classList.add('wrong');
+                        });
+                    } else {
+                        // Wrong
+                        label.classList.add('wrong');
+                        attemptsLeft--;
+                        input.checked = false; // Uncheck so they can try again
+                    }
+                };
 
                 li.appendChild(input);
                 li.appendChild(label);
@@ -371,7 +397,7 @@
 
         document.getElementById('submit-section').style.display = 'block';
 
-        // Pause videos when scrolled out of view
+        // Pause videos when out of view
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const iframe = entry.target.querySelector('iframe');
@@ -384,21 +410,12 @@
             });
         }, { threshold: 0.5 });
 
-        document.querySelectorAll('.video-container').forEach(container => {
-            observer.observe(container);
-        });
+        document.querySelectorAll('.video-container').forEach(container => observer.observe(container));
 
         function submitQuiz() {
             const button = document.querySelector('#submit-section button');
             button.disabled = true;
             document.getElementById('loading-overlay').style.display = 'flex';
-
-            let score = 0;
-            const total = questions.length;
-            questions.forEach((q, index) => {
-                const selected = document.querySelector(`input[name="question${index}"]:checked`);
-                if (selected && selected.value === q.name) score++;
-            });
 
             const playerName = document.getElementById('player-name').value.trim();
             if (!playerName) {
@@ -408,10 +425,13 @@
                 return;
             }
 
+            // Show final score (only points earned)
+            document.getElementById('final-score').textContent = totalPoints;
+
             const data = new FormData();
             data.append('Timestamp', new Date().toISOString());
             data.append('Name', playerName);
-            data.append('Score', `${score}/${total}`);
+            data.append('Score', totalPoints);
 
             const scriptURL = 'https://script.google.com/macros/s/AKfycbyRNsGrrqiEW25059b_8fkHHtjgJCEdw3cBP2KwaYCPuoiTe8W54X112hivXgVYh3Tyhg/exec';
 
