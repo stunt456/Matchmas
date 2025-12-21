@@ -69,7 +69,11 @@
             padding: 25px;
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            margin-bottom: 50px;
+            margin-bottom: 80px; /* Extra space for next button when at bottom */
+            min-height: calc(100vh - 200px); /* Ensure full viewport visibility on mobile */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
         }
         .song-title {
             font-weight: bold;
@@ -127,7 +131,7 @@
         .options {
             list-style: none;
             padding: 0;
-            margin: 0;
+            margin: 0 0 20px 0;
         }
         .options li {
             margin: 15px 0;
@@ -165,6 +169,7 @@
             border-color: #2ecc71;
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(39,174,96,0.5);
+            cursor: default;
         }
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
@@ -172,18 +177,23 @@
             20%, 40%, 60%, 80% { transform: translateX(10px); }
         }
         .next-button {
-            margin-top: 15px;
-            padding: 12px 24px;
+            margin-top: 20px;
+            padding: 15px 30px;
             background: #27ae60;
             color: white;
             border: none;
-            border-radius: 10px;
-            font-size: 1.2em;
+            border-radius: 12px;
+            font-size: 1.4em;
+            font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            align-self: center;
         }
         .next-button:hover {
             background: #2ecc71;
+            transform: translateY(-3px);
         }
         .options input[type="radio"] {
             display: none;
@@ -191,6 +201,10 @@
         #submit-section {
             text-align: center;
             margin-top: 50px;
+            padding: 30px;
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
         }
         #submit-section input {
             padding: 14px;
@@ -278,6 +292,8 @@
             .options label { font-size: 1.3em; padding: 20px; }
             #submit-section button { font-size: 1.4em; padding: 18px 40px; }
             .start-button { font-size: 1.5em; padding: 15px 40px; }
+            .question { margin-bottom: 100px; padding-bottom: 40px; }
+            .next-button { font-size: 1.3em; padding: 15px; }
         }
     </style>
 </head>
@@ -398,23 +414,8 @@
 
             let attemptsLeft = 5;
 
-            const nextButton = document.createElement('button');
-            nextButton.className = 'next-button';
-
-            // Special case for last question
-            if (index === questions.length - 1) {
-                nextButton.textContent = 'Nice! Just one last step ➡️';
-                nextButton.onclick = function() {
-                    document.getElementById('submit-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
-                };
-            } else {
-                nextButton.textContent = 'Correct! Click for the next song! ➡️';
-                nextButton.onclick = function() {
-                    const nextIndex = index + 1;
-                    document.getElementById(`question-${nextIndex}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
-                };
-            }
-            nextButton.style.display = 'none';
+            // The correct answer label will become the next button
+            let correctLabel = null;
 
             options.forEach(option => {
                 const li = document.createElement('li');
@@ -427,6 +428,10 @@
                 const label = document.createElement('label');
                 label.htmlFor = `q${index}_${option.replace(/\s/g, '')}`;
                 label.textContent = option;
+
+                if (option === q.name) {
+                    correctLabel = label;
+                }
 
                 label.onclick = function(e) {
                     if (label.classList.contains('wrong') || label.classList.contains('correct')) {
@@ -444,8 +449,19 @@
                                 l.style.animation = 'none';
                             }
                         });
-                        nextButton.style.display = 'block';
-                        li.appendChild(nextButton);
+
+                        // Transform correct label into next button while keeping name
+                        label.innerHTML = `${option} <br><span style="font-size:0.8em; margin-top:8px; display:block;">(Correct! Click here for next ➡️)</span>`;
+                        label.style.cursor = 'pointer';
+                        label.style.padding = '20px';
+                        label.onclick = function() {
+                            if (index === questions.length - 1) {
+                                document.getElementById('submit-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            } else {
+                                const nextIndex = index + 1;
+                                document.getElementById(`question-${nextIndex}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            }
+                        };
                     } else {
                         label.classList.add('wrong');
                         attemptsLeft--;
