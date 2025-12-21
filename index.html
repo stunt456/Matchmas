@@ -46,6 +46,23 @@
             margin: 20px 0;
             font-size: 2em;
         }
+        .start-button {
+            display: block;
+            margin: 30px auto;
+            padding: 18px 50px;
+            font-size: 1.8em;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+            transition: all 0.3s ease;
+        }
+        .start-button:hover {
+            background: #2ecc71;
+            transform: translateY(-5px);
+        }
         .question {
             background: rgba(255, 255, 255, 0.95);
             color: #333;
@@ -260,6 +277,7 @@
             .song-title { font-size: 1.3em; }
             .options label { font-size: 1.3em; padding: 20px; }
             #submit-section button { font-size: 1.4em; padding: 18px 40px; }
+            .start-button { font-size: 1.5em; padding: 15px 40px; }
         }
     </style>
 </head>
@@ -268,6 +286,9 @@
         <header>
             <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/QuizMasBanner.jpg" alt="QuizMas Banner">
             <h1>Guess Whose Favorite Christmas Song This Is! 🎄</h1>
+            <button class="start-button" onclick="document.getElementById('question-0').scrollIntoView({behavior: 'smooth', block: 'start'})">
+                Click here to begin! 🎅
+            </button>
         </header>
 
         <div id="quiz"></div>
@@ -379,15 +400,21 @@
 
             const nextButton = document.createElement('button');
             nextButton.className = 'next-button';
-            nextButton.textContent = 'Correct! Click for the next song! ➡️';
+
+            // Special case for last question
+            if (index === questions.length - 1) {
+                nextButton.textContent = 'Nice! Just one last step ➡️';
+                nextButton.onclick = function() {
+                    document.getElementById('submit-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                };
+            } else {
+                nextButton.textContent = 'Correct! Click for the next song! ➡️';
+                nextButton.onclick = function() {
+                    const nextIndex = index + 1;
+                    document.getElementById(`question-${nextIndex}`).scrollIntoView({ behavior: 'smooth', block: 'start' });
+                };
+            }
             nextButton.style.display = 'none';
-            nextButton.onclick = function() {
-                const nextIndex = index + 1;
-                if (nextIndex < questions.length) {
-                    const nextQuestion = document.getElementById(`question-${nextIndex}`);
-                    nextQuestion.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                }
-            };
 
             options.forEach(option => {
                 const li = document.createElement('li');
@@ -408,21 +435,18 @@
                     }
 
                     if (option === q.name) {
-                        // Correct!
                         label.classList.add('correct');
                         totalPoints += attemptsLeft;
                         ul.querySelectorAll('label').forEach(l => {
                             l.onclick = null;
                             if (l !== label) {
                                 l.classList.add('wrong');
-                                // Remove shake animation from revealed wrongs
                                 l.style.animation = 'none';
                             }
                         });
                         nextButton.style.display = 'block';
                         li.appendChild(nextButton);
                     } else {
-                        // Wrong - only this one shakes
                         label.classList.add('wrong');
                         attemptsLeft--;
                         input.checked = false;
