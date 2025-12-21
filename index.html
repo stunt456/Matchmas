@@ -69,7 +69,7 @@
             padding: 15px;
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.4);
-            margin-bottom: 140px; /* Generous space to prevent any cutoff */
+            margin-bottom: 140px;
         }
         .song-title {
             font-weight: bold;
@@ -222,7 +222,7 @@
             margin-top: 100px;
             line-height: 1.4;
         }
-        #thank-you img {
+        #thank-you .top-image {
             width: 100%;
             max-height: 500px;
             object-fit: contain;
@@ -302,10 +302,9 @@
         </div>
 
         <div id="thank-you">
+            <img class="top-image" src="https://raw.githubusercontent.com/stunt456/Matchmas/main/family-photo.png" alt="Scared Hay Hay">
             You got <span id="final-score"></span> points!<br><br>
             Your results have been recorded.<br>Merry Christmas! ❄️
-            <br><br>
-            <img src="https://raw.githubusercontent.com/stunt456/Matchmas/main/family-photo.png" alt="Scared Hay Hay">
         </div>
     </div>
 
@@ -505,6 +504,7 @@
                         document.getElementById('quiz').style.display = 'none';
                         document.getElementById('submit-section').style.display = 'none';
                         document.getElementById('thank-you').style.display = 'block';
+                        document.querySelector('header').style.display = 'none'; // Hide header on final screen
                     } else {
                         alert('There was a problem submitting. Please try again.');
                     }
