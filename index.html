@@ -331,7 +331,7 @@
         questions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
             questionDiv.className = 'question';
-            questionDiv.id = `question-${index}`; // For scrolling
+            questionDiv.id = `question-${index}`;
 
             const songTitle = document.createElement('div');
             songTitle.className = 'song-title';
@@ -368,7 +368,6 @@
             videoContainer.appendChild(overlay);
             questionDiv.appendChild(videoContainer);
 
-            // 5 options
             const allNames = people.map(p => p.name);
             const distractors = allNames.filter(n => n !== q.name).sort(() => 0.5 - Math.random()).slice(0, 4);
             const options = [...distractors, q.name].sort(() => 0.5 - Math.random());
@@ -414,12 +413,16 @@
                         totalPoints += attemptsLeft;
                         ul.querySelectorAll('label').forEach(l => {
                             l.onclick = null;
-                            if (l !== label) l.classList.add('wrong');
+                            if (l !== label) {
+                                l.classList.add('wrong');
+                                // Remove shake animation from revealed wrongs
+                                l.style.animation = 'none';
+                            }
                         });
                         nextButton.style.display = 'block';
                         li.appendChild(nextButton);
                     } else {
-                        // Wrong
+                        // Wrong - only this one shakes
                         label.classList.add('wrong');
                         attemptsLeft--;
                         input.checked = false;
@@ -437,7 +440,6 @@
 
         document.getElementById('submit-section').style.display = 'block';
 
-        // Pause videos when out of view
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 const iframe = entry.target.querySelector('iframe');
