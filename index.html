@@ -114,6 +114,7 @@
         }
         .options li {
             margin: 15px 0;
+            position: relative;
         }
         .options label {
             display: block;
@@ -128,19 +129,44 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         }
-        .options label:hover:not(.wrong) {
+        .options label:hover:not(.wrong):not(.correct) {
             background: #e74c3c;
             color: white;
             transform: translateY(-3px);
             box-shadow: 0 8px 15px rgba(0,0,0,0.2);
         }
         .options label.wrong {
-            background: #ccc !important;
-            color: #666 !important;
-            border-color: #999;
+            background: #e74c3c !important;
+            color: white !important;
+            border-color: #c0392b;
             cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
+            animation: shake 0.5s ease;
+        }
+        .options label.correct {
+            background: #27ae60 !important;
+            color: white !important;
+            border-color: #2ecc71;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(39,174,96,0.5);
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+            20%, 40%, 60%, 80% { transform: translateX(10px); }
+        }
+        .next-button {
+            margin-top: 15px;
+            padding: 12px 24px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.2em;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+        .next-button:hover {
+            background: #2ecc71;
         }
         .options input[type="radio"] {
             display: none;
@@ -300,12 +326,12 @@
         const questions = shuffled;
         const quizDiv = document.getElementById('quiz');
 
-        let totalPoints = 0; // Will accumulate earned points
+        let totalPoints = 0;
 
         questions.forEach((q, index) => {
             const questionDiv = document.createElement('div');
             questionDiv.className = 'question';
-            questionDiv.dataset.index = index;
+            questionDiv.id = `question-${index}`; // For scrolling
 
             const songTitle = document.createElement('div');
             songTitle.className = 'song-title';
@@ -350,7 +376,19 @@
             const ul = document.createElement('ul');
             ul.className = 'options';
 
-            let attemptsLeft = 5; // Max points per question
+            let attemptsLeft = 5;
+
+            const nextButton = document.createElement('button');
+            nextButton.className = 'next-button';
+            nextButton.textContent = 'Correct! Click for the next song! ➡️';
+            nextButton.style.display = 'none';
+            nextButton.onclick = function() {
+                const nextIndex = index + 1;
+                if (nextIndex < questions.length) {
+                    const nextQuestion = document.getElementById(`question-${nextIndex}`);
+                    nextQuestion.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            };
 
             options.forEach(option => {
                 const li = document.createElement('li');
@@ -364,25 +402,27 @@
                 label.htmlFor = `q${index}_${option.replace(/\s/g, '')}`;
                 label.textContent = option;
 
-                // Click handler for feedback
                 label.onclick = function(e) {
-                    if (label.classList.contains('wrong')) {
+                    if (label.classList.contains('wrong') || label.classList.contains('correct')) {
                         e.preventDefault();
                         return;
                     }
 
                     if (option === q.name) {
                         // Correct!
+                        label.classList.add('correct');
                         totalPoints += attemptsLeft;
                         ul.querySelectorAll('label').forEach(l => {
-                            l.onclick = null; // Disable further clicks
+                            l.onclick = null;
                             if (l !== label) l.classList.add('wrong');
                         });
+                        nextButton.style.display = 'block';
+                        li.appendChild(nextButton);
                     } else {
                         // Wrong
                         label.classList.add('wrong');
                         attemptsLeft--;
-                        input.checked = false; // Uncheck so they can try again
+                        input.checked = false;
                     }
                 };
 
@@ -425,7 +465,6 @@
                 return;
             }
 
-            // Show final score (only points earned)
             document.getElementById('final-score').textContent = totalPoints;
 
             const data = new FormData();
