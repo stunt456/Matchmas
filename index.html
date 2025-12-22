@@ -340,7 +340,9 @@
             { name: "Jason", song: "His Favorite Christmas Story by Capital Lights", videoId: "DgFi2A-FyWI" },
             { name: "Allie", song: "O Holy Night by Kelly Clarkson", videoId: "qrRRqRIBZCA" },
             { name: "Alex", song: "Jingle Swing by Ali McGregor", videoId: "6ZXJGonvp58" },
-            { name: "Kyle", song: "The Christmas Song by Olivia Dean", videoId: "Nv85T6ZEkS8" }
+            { name: "Kyle", song: "The Christmas Song by Olivia Dean", videoId: "Nv85T6ZEkS8" },
+            { name: "Aria", song: "All I Want for Christmas is You by Mariah Carey", videoId: "yXQViqx6GMY" },
+            { name: "Judy", song: "I'll be home for Christmas by Frank Sinatra", videoId: "Ef-cIXtIZeM" }
         ];
 
         const shuffled = [...people].sort(() => 0.5 - Math.random());
@@ -504,7 +506,7 @@
                         document.getElementById('quiz').style.display = 'none';
                         document.getElementById('submit-section').style.display = 'none';
                         document.getElementById('thank-you').style.display = 'block';
-                        document.querySelector('header').style.display = 'none'; // Hide header on final screen
+                        document.querySelector('header').style.display = 'none';
                     } else {
                         alert('There was a problem submitting. Please try again.');
                     }
